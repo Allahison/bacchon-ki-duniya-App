@@ -4,11 +4,11 @@
     "slug": "bacchon-ki-duniya",
     "version": "1.0.0",
     "orientation": "portrait",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/images/saplas.png",
     "userInterfaceStyle": "light",
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "splash": {
-      "image": "./assets/splash-icon.png",
+      "image": "./assets/images/saplas.png",
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
@@ -16,14 +16,22 @@
       "supportsTablet": true
     },
     "android": {
+      "package": "com.muhammadarslan21.bacchonkiduniya",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage":"./assets/images/saplas.png",
         "backgroundColor": "#ffffff"
       },
-      "edgeToEdgeEnabled": true
+      "permissions": [],
+      "versionCode": 1,
+      "edgeToEdge": true
     },
     "web": {
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/images/saplas.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "5df336c5-ede8-475d-9a2e-7c7625f1b058"
+      }
     }
   }
 }
