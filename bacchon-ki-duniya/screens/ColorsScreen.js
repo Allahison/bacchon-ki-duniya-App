@@ -9,15 +9,24 @@ import {
   Alert,
   ScrollView,
   ActivityIndicator,
+  Modal,
 } from "react-native";
 import * as Speech from "expo-speech";
 import ColorCard from "../components/ColorCard";
 import colors from "../data/colors";
 
+// ✅ Categorized in 3 phases
+const phase1Colors = ["Red", "Blue", "Yellow", "Green", "White"];
+const phase2Colors = ["Orange", "Purple", "Brown", "Black", "Pink"];
+const phase3Colors = colors
+  .map((c) => c.name)
+  .filter((name) => !phase1Colors.includes(name) && !phase2Colors.includes(name));
+
 const categories = {
   All: colors,
-  Warm: colors.filter((c) => ["Red", "Orange", "Yellow"].includes(c.name)),
-  Cool: colors.filter((c) => ["Blue", "Green", "Purple"].includes(c.name)),
+  Phase1: colors.filter((c) => phase1Colors.includes(c.name)),
+  Phase2: colors.filter((c) => phase2Colors.includes(c.name)),
+  Phase3: colors.filter((c) => phase3Colors.includes(c.name)),
 };
 
 export default function ColorsScreen() {
@@ -27,9 +36,12 @@ export default function ColorsScreen() {
   const [questionIndex, setQuestionIndex] = useState(0);
   const [score, setScore] = useState(0);
   const [language, setLanguage] = useState("english");
-  const [isSpeaking, setIsSpeaking] = useState(false); // NEW
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [quizModalVisible, setQuizModalVisible] = useState(false);
+  const [quizCategory, setQuizCategory] = useState("All");
+  const [shuffledQuizColors, setShuffledQuizColors] = useState([]);
 
-  const colorList = categories[selectedCategory];
+  const colorList = testMode ? shuffledQuizColors : categories[selectedCategory];
   const currentQuestion = colorList[questionIndex];
 
   const handleColorTap = (item) => {
@@ -40,12 +52,11 @@ export default function ColorsScreen() {
   };
 
   const speakColor = (item) => {
-    setIsSpeaking(true); // Start loader
+    setIsSpeaking(true);
     Speech.stop();
-
     Speech.speak(language === "urdu" ? item.translation : item.name, {
       language: language === "urdu" ? "ur-PK" : "en-US",
-      onDone: () => setIsSpeaking(false),   // Stop loader after speech
+      onDone: () => setIsSpeaking(false),
       onStopped: () => setIsSpeaking(false),
       onError: () => setIsSpeaking(false),
     });
@@ -79,6 +90,7 @@ export default function ColorsScreen() {
     setScore(0);
     Speech.stop();
     setIsSpeaking(false);
+    setShuffledQuizColors([]);
   };
 
   const toggleLanguage = () => {
@@ -86,19 +98,30 @@ export default function ColorsScreen() {
     setLanguage((prev) => (prev === "english" ? "urdu" : "english"));
   };
 
+  const startTest = () => {
+    setQuizModalVisible(false);
+    const shuffled = shuffleArray(categories[quizCategory]);
+    setShuffledQuizColors(shuffled);
+    setTestMode(true);
+    setQuestionIndex(0);
+    setScore(0);
+  };
+
   return (
     <View style={styles.container}>
       <StatusBar backgroundColor="#FFF3E0" barStyle="dark-content" />
       <Text style={styles.title}>🎨 Learn Colors</Text>
 
-      {/* Sticky header area */}
       <View style={styles.stickyHeader}>
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={styles.buttonRow}
         >
-          <TouchableOpacity style={styles.languageToggle} onPress={toggleLanguage}>
+          <TouchableOpacity
+            style={styles.languageToggle}
+            onPress={toggleLanguage}
+          >
             <Text style={styles.buttonText}>
               {language === "english" ? "🔊 English" : "🔊 اردو"}
             </Text>
@@ -132,7 +155,7 @@ export default function ColorsScreen() {
             style={[styles.testButton, testMode && styles.activeTest]}
             onPress={() => {
               resetTest();
-              setTestMode(!testMode);
+              setQuizModalVisible(true);
             }}
           >
             <Text
@@ -148,6 +171,38 @@ export default function ColorsScreen() {
         </ScrollView>
       </View>
 
+      <Modal visible={quizModalVisible} animationType="slide" transparent>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.modalTitle}>Select Quiz Category</Text>
+            {Object.keys(categories).map((cat) => (
+              <TouchableOpacity
+                key={cat}
+                style={styles.modalOption}
+                onPress={() => setQuizCategory(cat)}
+              >
+                <Text
+                  style={{
+                    color: quizCategory === cat ? "#fff" : "#D84315",
+                    fontWeight: "bold",
+                  }}
+                >
+                  {cat}
+                </Text>
+              </TouchableOpacity>
+            ))}
+            <TouchableOpacity style={styles.modalStart} onPress={startTest}>
+              <Text style={{ color: "#fff", fontWeight: "bold" }}>
+                Start Quiz
+              </Text>
+            </TouchableOpacity>
+            <TouchableOpacity onPress={() => setQuizModalVisible(false)}>
+              <Text style={{ color: "#D84315", marginTop: 10 }}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
+
       {isSpeaking && (
         <View style={styles.loaderContainer}>
           <ActivityIndicator size="large" color="#D84315" />
@@ -155,13 +210,11 @@ export default function ColorsScreen() {
         </View>
       )}
 
-      {/* Main content area */}
       {!testMode ? (
         <ScrollView contentContainerStyle={{ paddingBottom: 100 }}>
           <Text style={styles.progress}>
             ✅ You've learned {viewedColors.length} of {colors.length} colors!
           </Text>
-
           {viewedColors.length > 0 && (
             <TouchableOpacity
               style={styles.clearButton}
@@ -170,7 +223,6 @@ export default function ColorsScreen() {
               <Text style={styles.clearText}>🔁 Clear Progress</Text>
             </TouchableOpacity>
           )}
-
           <FlatList
             data={colorList}
             renderItem={({ item }) => (
@@ -189,11 +241,17 @@ export default function ColorsScreen() {
           />
         </ScrollView>
       ) : (
-        <ScrollView contentContainerStyle={styles.quiz} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.quiz}
+          showsVerticalScrollIndicator={false}
+        >
           <Text style={styles.question}>Which color is this?</Text>
           <TouchableOpacity onPress={() => speakColor(currentQuestion)}>
             <View
-              style={[styles.colorBlock, { backgroundColor: currentQuestion.hex }]}
+              style={[
+                styles.colorBlock,
+                { backgroundColor: currentQuestion.hex },
+              ]}
             />
           </TouchableOpacity>
           <View style={styles.options}>
@@ -236,10 +294,7 @@ const styles = StyleSheet.create({
     color: "#D84315",
     textAlign: "center",
   },
-  stickyHeader: {
-    backgroundColor: "#FFF3E0",
-    paddingVertical: 5,
-  },
+  stickyHeader: { backgroundColor: "#FFF3E0", paddingVertical: 5 },
   buttonRow: {
     flexDirection: "row",
     alignItems: "center",
@@ -252,29 +307,21 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     borderRadius: 20,
   },
-  buttonText: {
-    fontSize: 16,
-    color: "#fff",
-    fontWeight: "bold",
-  },
+  buttonText: { fontSize: 16, color: "#fff", fontWeight: "bold" },
   filterButton: {
     backgroundColor: "#FFE0B2",
     paddingVertical: 8,
     paddingHorizontal: 16,
     borderRadius: 20,
   },
-  activeFilter: {
-    backgroundColor: "#D84315",
-  },
+  activeFilter: { backgroundColor: "#D84315" },
   testButton: {
     paddingVertical: 8,
     paddingHorizontal: 14,
     backgroundColor: "#FFE0B2",
     borderRadius: 20,
   },
-  activeTest: {
-    backgroundColor: "#D84315",
-  },
+  activeTest: { backgroundColor: "#D84315" },
   progress: {
     fontSize: 16,
     color: "#6D4C41",
@@ -289,23 +336,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     marginBottom: 10,
   },
-  clearText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  list: {
-    alignItems: "center",
-    paddingBottom: 80,
-  },
-  quiz: {
-    alignItems: "center",
-    padding: 20,
-  },
-  question: {
-    fontSize: 22,
-    marginBottom: 20,
-    fontWeight: "bold",
-  },
+  clearText: { color: "#fff", fontWeight: "bold" },
+  list: { alignItems: "center", paddingBottom: 80 },
+  quiz: { alignItems: "center", padding: 20 },
+  question: { fontSize: 22, marginBottom: 20, fontWeight: "bold" },
   colorBlock: {
     width: 150,
     height: 150,
@@ -314,12 +348,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#000",
   },
-  options: {
-    width: "100%",
-    marginTop: 10,
-    gap: 10,
-    paddingBottom: 40,
-  },
+  options: { width: "100%", marginTop: 10, gap: 10, paddingBottom: 40 },
   optionButton: {
     padding: 12,
     backgroundColor: "#FFF8E1",
@@ -335,9 +364,40 @@ const styles = StyleSheet.create({
     gap: 10,
     marginVertical: 10,
   },
-  loaderText: {
-    fontSize: 16,
-    color: "#D84315",
+  loaderText: { fontSize: 16, color: "#D84315", fontWeight: "bold" },
+  modalOverlay: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "rgba(0,0,0,0.5)",
+  },
+  modalContainer: {
+    width: "80%",
+    backgroundColor: "#FFF",
+    borderRadius: 20,
+    padding: 20,
+    alignItems: "center",
+  },
+  modalTitle: {
+    fontSize: 20,
     fontWeight: "bold",
+    marginBottom: 20,
+    color: "#D84315",
+  },
+  modalOption: {
+    backgroundColor: "#FFE0B2",
+    padding: 10,
+    marginVertical: 5,
+    borderRadius: 10,
+    width: "100%",
+    alignItems: "center",
+  },
+  modalStart: {
+    marginTop: 15,
+    backgroundColor: "#D84315",
+    padding: 10,
+    borderRadius: 10,
+    width: "100%",
+    alignItems: "center",
   },
 });
