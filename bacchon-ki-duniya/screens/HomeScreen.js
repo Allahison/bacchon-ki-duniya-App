@@ -8,10 +8,14 @@ import {
   Animated,
   Platform,
   Alert,
+  StatusBar as RNStatusBar,
+  TouchableOpacity,
 } from 'react-native';
+import { StatusBar } from 'expo-status-bar';
 import * as Speech from 'expo-speech';
 import * as Notifications from 'expo-notifications';
 import * as Device from 'expo-device';
+import { Ionicons } from '@expo/vector-icons';
 
 // Configure notification handler
 Notifications.setNotificationHandler({
@@ -46,7 +50,6 @@ export default function HomeScreen({ navigation }) {
 
   useEffect(() => {
     Speech.speak('Welcome to Little Learners Land!');
-
     const randomTip = tips[Math.floor(Math.random() * tips.length)];
     setTip(randomTip);
 
@@ -83,9 +86,8 @@ export default function HomeScreen({ navigation }) {
         sound: true,
       },
       trigger: {
-        hour: 17,
-        minute: 0,
-        repeats: true,
+        seconds: 60,
+        repeats: false,
       },
     });
   };
@@ -113,32 +115,43 @@ export default function HomeScreen({ navigation }) {
   ];
 
   return (
-    <ScrollView contentContainerStyle={styles.container}>
-      <Text style={styles.heading}>🎉 Little Learners Land 🎉</Text>
-
-      <View style={styles.tipBox}>
-        <Text style={styles.tipTitle}>💡 Learning Tip:</Text>
-        <Text style={styles.tipText}>{tip}</Text>
-      </View>
-
-      {buttons.map((btn, index) => (
-        <TouchableWithoutFeedback
-          key={index}
-          onPressIn={handlePressIn}
-          onPressOut={handlePressOut}
-          onPress={() => navigation.navigate(btn.screen)}
+    <>
+      <StatusBar style="dark" translucent={false} />
+      <ScrollView contentContainerStyle={styles.container}>
+        {/* Settings Button */}
+        <TouchableOpacity
+          onPress={() => navigation.navigate('Settings')}
+          style={styles.settingsIcon}
         >
-          <Animated.View
-            style={[
-              styles.button,
-              { backgroundColor: btn.color, transform: [{ scale: scaleAnim }] },
-            ]}
+          <Ionicons name="settings-sharp" size={28} color="#333" />
+        </TouchableOpacity>
+
+        <Text style={styles.heading}>🎉 Little Learners Land 🎉</Text>
+
+        <View style={styles.tipBox}>
+          <Text style={styles.tipTitle}>💡 Learning Tip:</Text>
+          <Text style={styles.tipText}>{tip}</Text>
+        </View>
+
+        {buttons.map((btn, index) => (
+          <TouchableWithoutFeedback
+            key={index}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+            onPress={() => navigation.navigate(btn.screen)}
           >
-            <Text style={styles.buttonText}>{btn.title}</Text>
-          </Animated.View>
-        </TouchableWithoutFeedback>
-      ))}
-    </ScrollView>
+            <Animated.View
+              style={[
+                styles.button,
+                { backgroundColor: btn.color, transform: [{ scale: scaleAnim }] },
+              ]}
+            >
+              <Text style={styles.buttonText}>{btn.title}</Text>
+            </Animated.View>
+          </TouchableWithoutFeedback>
+        ))}
+      </ScrollView>
+    </>
   );
 }
 
@@ -148,6 +161,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingVertical: 40,
+    paddingTop: Platform.OS === 'android' ? RNStatusBar.currentHeight : 0,
     backgroundColor: '#bba986ff',
   },
   heading: {
@@ -189,5 +203,11 @@ const styles = StyleSheet.create({
     fontSize: 22,
     color: '#fff',
     fontWeight: 'bold',
+  },
+  settingsIcon: {
+    position: 'absolute',
+    top: 40,
+    right: 20,
+    zIndex: 10,
   },
 });

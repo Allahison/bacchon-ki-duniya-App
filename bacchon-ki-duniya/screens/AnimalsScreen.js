@@ -61,11 +61,12 @@ export default function AnimalsScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: '#EAF6F6',
+    backgroundColor: '#a4b5b4ff',
     paddingTop: 40,
     paddingHorizontal: 10,
   },
   heading: {
+    color: '#164970ff',
     fontSize: 24,
     fontWeight: 'bold',
     marginBottom: 10,

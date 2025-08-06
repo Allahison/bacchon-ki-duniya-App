@@ -1,17 +1,17 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { View, Text, Image, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, Image, StyleSheet, TouchableOpacity, Share } from 'react-native';
 import { Audio } from 'expo-av';
 
 export default function StoryCard({ story, currentlyPlaying, setCurrentlyPlaying }) {
   const [sound, setSound] = useState(null);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isPaused, setIsPaused] = useState(false);
-  const isStarting = useRef(false); // ⛔️ Prevent double-tap replay
+  const isStarting = useRef(false);
 
   const playSound = async () => {
-    if (isStarting.current) return; // already starting
-
+    if (isStarting.current) return;
     isStarting.current = true;
+
     try {
       const { sound: newSound } = await Audio.Sound.createAsync(story.sound);
       setSound(newSound);
@@ -72,6 +72,16 @@ export default function StoryCard({ story, currentlyPlaying, setCurrentlyPlaying
     }
   };
 
+  const handleShare = async () => {
+    try {
+      await Share.share({
+        message: `📖 ${story.title}\n\n${story.text || 'یہ ایک دلچسپ کہانی ہے، ضرور پڑھیں!'}`
+      });
+    } catch (error) {
+      console.error('Sharing failed:', error);
+    }
+  };
+
   useEffect(() => {
     return () => {
       if (sound) {
@@ -101,6 +111,11 @@ export default function StoryCard({ story, currentlyPlaying, setCurrentlyPlaying
           </TouchableOpacity>
         </View>
       )}
+
+      {/* 📤 Share Button */}
+      <TouchableOpacity style={styles.shareButton} onPress={handleShare}>
+        <Text style={styles.shareButtonText}>📤 شیئر کریں</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -161,6 +176,18 @@ const styles = StyleSheet.create({
   controlButtonText: {
     color: '#fff',
     fontSize: 14,
+    fontWeight: '600',
+  },
+  shareButton: {
+    backgroundColor: '#4FC3F7',
+    paddingVertical: 10,
+    paddingHorizontal: 24,
+    borderRadius: 20,
+    marginTop: 12,
+  },
+  shareButtonText: {
+    color: '#fff',
+    fontSize: 16,
     fontWeight: '600',
   },
 });

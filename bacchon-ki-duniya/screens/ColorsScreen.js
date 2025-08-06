@@ -339,7 +339,7 @@ const styles = StyleSheet.create({
   clearText: { color: "#fff", fontWeight: "bold" },
   list: { alignItems: "center", paddingBottom: 80 },
   quiz: { alignItems: "center", padding: 20 },
-  question: { fontSize: 22, marginBottom: 20, fontWeight: "bold" },
+  question: { fontSize: 22, marginBottom: 20, fontWeight: "bold" ,color: "#D84315"},
   colorBlock: {
     width: 150,
     height: 150,
@@ -351,7 +351,7 @@ const styles = StyleSheet.create({
   options: { width: "100%", marginTop: 10, gap: 10, paddingBottom: 40 },
   optionButton: {
     padding: 12,
-    backgroundColor: "#FFF8E1",
+    backgroundColor: "#7f7e7dff",
     borderRadius: 10,
     borderWidth: 1,
     borderColor: "#D84315",

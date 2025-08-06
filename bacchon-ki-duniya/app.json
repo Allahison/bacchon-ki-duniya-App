@@ -18,7 +18,7 @@
     "android": {
       "package": "com.muhammadarslan21.bacchonkiduniya",
       "adaptiveIcon": {
-        "foregroundImage":"./assets/images/saplas.png",
+        "foregroundImage": "./assets/images/saplas.png",
         "backgroundColor": "#ffffff"
       },
       "permissions": [],
@@ -32,6 +32,9 @@
       "eas": {
         "projectId": "5df336c5-ede8-475d-9a2e-7c7625f1b058"
       }
-    }
+    },
+    "plugins": [
+      "expo-audio"
+    ]
   }
 }
